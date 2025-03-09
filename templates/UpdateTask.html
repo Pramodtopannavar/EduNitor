@@ -41,14 +41,14 @@
                                         id="t_deadline_date" value="{{tasks.t_deadline_date}}">
                                 </div>
 
-                                <div class="form-group">
+                                {% comment %} <div class="form-group">
                                     <label for="task-assign-employee">Employee Assign</label>
                                     <select name="e_id" class="form-control" id="e_id">
                                         {% for eob in projects_emp_link %}
                                         <option value={{eob.e_id_id}}>{{eob.e_id.e_name.upper}}</option>
                                         {% endfor %}
                                     </select>
-                                </div>
+                                </div> {% endcomment %}
 
                                 <div class="form-group">
                                     <button type="submit" class="btn btn-primary">Update Task</button>

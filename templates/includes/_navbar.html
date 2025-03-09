@@ -60,8 +60,8 @@
                     <li class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><span class="fas fa-sign-in-alt">Login</span></a>
                         <div class="dropdown-menu">
-                            <a href="/LoginOrg" class="dropdown-item">Organization Login</a>
-                            <a href="/LoginUser" class="dropdown-item">User Login</a>
+                            <a href="/LoginOrg" class="dropdown-item">Teacher Login</a>
+                            <a href="/LoginUser" class="dropdown-item">Student Login</a>
                         </div>
                         </li>
                     </li>
@@ -75,6 +75,10 @@
                                 Us</span></a>
                     </li>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="active7" href="/team"><span class="fas fa-team">Team</span></a>
+                    </li>
+                </li>
                     <li class="nav-item">
                         <a class="nav-link" id="active7" href="/faq"><span class="fas fa-question"> FAQ</span></a>
                     </li>
@@ -105,11 +109,11 @@
                     success: function (response) {
                         if (response == "success") {
                             console.log(response);
-                            window.location.href = "http://localhost:8081/";
+                            window.location.href = "http://localhost:3031/";
                         }
                         else
                         {
-                            window.location.href = "http://localhost:8081/";
+                            window.location.href = "http://localhost:3031/";
                         }
                     }
                 });

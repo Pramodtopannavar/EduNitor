@@ -27,6 +27,7 @@ urlpatterns = [
     path('VerifyEmail',av.verifyEmail),
     path('logout',av.logout),
     path('contact',av.contact),
+    path('team',av.team),
     path('faq', av.faq),
     #password change for organization by verfying the email
     path('org-forgot-password',av.org_forgot_password),
@@ -75,8 +76,8 @@ urlpatterns = [
 
     path('assign-proj',av.assign_proj_emp),
     path('select-unassign', av.select_unassign, name="select-unassign"),
-    path('unassign-employee', av.unassign_employee, name="unassign-employee"),#error
-    path('unassign-emp/<int:eid>', av.unassign_emp),#error
+    path('unassign-employee', av.unassign_employee, name="unassign-employee"),
+    path('unassign-emp/<int:eid>', av.unassign_emp),
     #########################################
 
     ######## board option ##################

@@ -31,12 +31,12 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Choose Gender of
-                                        Employee:</label>
+                                        Student:</label>
                                     <input type="text" name="e_gender" class="form-control"
                                         value="{{msg.e_gender.upper}}" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label class="h6" for="exampleFormControlTextarea1">Address of Employee</label>
+                                    <label class="h6" for="exampleFormControlTextarea1">Address of Student</label>
                                     <textarea name="e_address" class="form-control" rows="6"
                                         readonly>{{msg.e_address}}</textarea>
                                 </div>
@@ -57,7 +57,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Assigned Projects:</label>
+                                    <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Assigned Batch:</label>
                                     <ul class="list-group">
                                         {% for result in msg4 %}
                                         <li class="list-group-item">{{result.p_name}}</li>

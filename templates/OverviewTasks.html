@@ -49,11 +49,15 @@
                     <div class="card-body p-0">
                         <p>{{task.t_desc}}</p>
 
-                        <h4 class="fs-6 fw-normal mt-4"><b>Project:</b>
+                        <h4 class="fs-6 fw-normal mt-4"><b>Batch:</b>
                             {{task.p_id.p_name|upper}}</h4>
 
                         <h4 class="fs-6 fw-normal mt-4"><b>Assigned:</b>
-                        {{task.e_id.e_name|upper}}</h4>
+                            {% for employee in task.e_id.all %}
+                            {{ employee.e_name|upper }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            No employees assigned
+                        {% endfor %}</h4>
                         <h4 class="fs-6 fw-normal mt-4"><b>Priority:</b>
                                                             {% if task.t_priority == "High Priority" %}
                                                         <span class="badge bg-danger">High</span>

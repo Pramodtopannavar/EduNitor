@@ -161,3 +161,4 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "pramodtopannavar17@gmail.com"
 EMAIL_HOST_PASSWORD = "sdpx cuwl dirj eovb"
+

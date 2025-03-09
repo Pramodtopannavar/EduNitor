@@ -6,7 +6,7 @@
             <div class="card-body align-items-center d-flex justify-content-center">
                 <div class="row mb-4">
                     <div class="col-lg-12 col-sm-16">
-                        <h3 class="h3 text-center">View Boards</h3>
+                        <h3 class="h3 text-center">View Classes</h3>
                     </div>
                     {% if msg is not none and msg %}
                                     <img src="/static/html/assets/img/undraw_Scrum_board_re_wk7v.png" width="250px" height="350px">
@@ -20,7 +20,7 @@
                                         <center>
                                             <input type="hidden" id="boardId" value="{{result.id}}">
                                             <a href="/boardwise-tasks/{{result.id}}" class="btn btn-primary">VIEW TASKS</a>
-                                            <a href="/del-board/{{result.id}}" class="btn btn-danger">DELETE BOARD</a>
+                                            <a href="/del-board/{{result.id}}" class="btn btn-danger">DELETE Class</a>
                                         </center>
                                     </div>
                                 </div>

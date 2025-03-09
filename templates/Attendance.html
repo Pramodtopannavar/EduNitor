@@ -14,7 +14,7 @@
                         {% csrf_token %}
                         <div class="mb-4">
                             <div class="form-group">
-                                <label class="my-1 mr-2" for="livebox2">Choose Employee:</label>
+                                <label class="my-1 mr-2" for="livebox2">Choose Student:</label>
                                 <select class="custom-select my-1 mr-sm-2" id="livebox2" name="e_id" required>
                                     {% for test1 in msg %}
                                     <option value={{test1.id}}>{{test1.e_name.upper}}</option>

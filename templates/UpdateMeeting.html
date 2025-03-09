@@ -53,7 +53,7 @@
 
                                 <div class="form-group">
                                     <label class="my-1 mr-2" for="livebox1">Choose
-                                        Project:{{meet_details.p_id_id}}</label>
+                                        Batch:</label>
                                     <select class="custom-select my-1 mr-sm-2" id="livebox1" name="p_id" required>
                                         {% for pid, pname in zipped_pid_pnames %}
                                         <option value={{pid}} {% if current_project_name in pname %}selected{% endif %}>

@@ -6,7 +6,7 @@
             <div class="card-body align-items-center d-flex justify-content-center">
                 <div class="row mb-4">
                     <div class="col-lg-12 col-sm-16">
-                        <h3 class="h3 text-center">Add Board</h3>
+                        <h3 class="h3 text-center">Add Class</h3>
                     </div>
                     <center>
                         <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_ihsy8p2a.json"
@@ -18,9 +18,9 @@
                             {% csrf_token %}
                             <div class="mb-4">
                                 <div class="form-group">
-                                    <label class="h6" for="exampleFormControlTextarea1">Board Name:</label>
+                                    <label class="h6" for="exampleFormControlTextarea1">Class Name:</label>
 
-                                    <input type="text" name="b_name" class="form-control" placeholder="Name of Board" required>
+                                    <input type="text" name="b_name" class="form-control" placeholder="Name of Batch" required>
                                 </div>
                                 <input type="submit" class="btn btn-primary" value="Add">
                         </form>

@@ -6,7 +6,7 @@
             <div class="card-body align-items-center d-flex justify-content-center">
                 <div class="row mb-4">
                     <div class="col-lg-12 col-sm-16">
-                        <h3 class="h3 text-center">View Projects</h3>
+                        <h3 class="h3 text-center">View Batches</h3>
                     </div>
                     {% if msg is not none and msg %}
                     <center>
@@ -25,7 +25,7 @@
                                         <p class="text-center">{{result.p_desc}}</p>
                                         <center>
                                             <a href="/projectwise-tasks/{{result.id}}" class="btn btn-primary">VIEW TASKS</a>
-                                            <a href="/del-proj/{{result.id}}" class="btn btn-danger">DELETE PROJECT</a>
+                                            <a href="/del-proj/{{result.id}}" class="btn btn-danger">DELETE Batch</a>
                                         </center>
                                     </div>
                                 </div>

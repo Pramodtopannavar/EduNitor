@@ -36,6 +36,15 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="board-name">Board Name</label>
+                                <select name="b_id" class="custom-select my-1 mr-sm-2" id="b_id">
+                                    {% for board in boards %}
+                                    <option value="{{board.id}}">{{board.b_name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
                                 <label for="project-name">Project Name:</label>
                                 <select name="p_id" class="custom-select my-1 mr-sm-2" id="p_id">
                                     <option value="0" selected>Select</option>
@@ -46,23 +55,16 @@
                             </div>
 
 
-                            <div class="form-group">
-                                <label for="board-name">Board Name</label>
-                                <select name="b_id" class="custom-select my-1 mr-sm-2" id="b_id">
-                                    {% for board in boards %}
-                                    <option value="{{board.id}}">{{board.b_name}}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                            
 
-                            <div class="form-group">
+                            {% comment %} <div class="form-group">
                                 <label for="task-name">Employee Name</label>
                                 <select name="e_id" class="custom-select my-1 mr-sm-2" id="e_id">
                                     <!-- {% for employee in employees %}
                 <option value="{{employee.id}}">{{employee.e_name}}</option>
                 {% endfor %} -->
                                 </select>
-                            </div>
+                            </div> {% endcomment %}
 
                             <div class="form-group">
                                 <label for="task-name">Task Assigned Date</label>
@@ -89,7 +91,7 @@
                                 </lottie-player>
                             </center>
                             <h3 class="h3 text-center">
-                               For creating task, you should have at least one project, one board & one employee
+                               For creating task, you should have at least one Batch, one Class & one Student
                             </h3>
                         </div>
                         {% endif %}

@@ -194,6 +194,8 @@ def contact(request):
         return render(request, 'contact.html', {"msg" : msg})
     return render(request, 'contact.html')
 
+def team(request):
+    return render(request, 'team.html')
 
 #faq
 
@@ -362,7 +364,7 @@ def add_emp(request):
         if empObj:
             subject = 'MyRemoteDesk - Login Info'
             org_name = request.session['o_name']
-            message = f'\nName : {e_name}, \n Email : {e_email}, \n Password : {e_password} \n Organization : {org_name}, \n FROM - MyRemoteDesk \n pramod,siddappa,yugant,prathamesh'
+            message = f'\nName : {e_name}, \n Email : {e_email}, \n Password : {e_password} \n Teacher : {org_name},\n FROM - MyRemoteDesk \n pramod,siddappa,yugant,prathamesh'
             email_from = settings.EMAIL_HOST_USER
             send_mail(subject, message, email_from, [e_email])
             messages.success(request, "Employee was added successfully!")
@@ -670,8 +672,8 @@ def assign_proj_emp(request):
                 project_details = Project.objects.filter(o_id_id=o_id,id=p_id).values()
                 s_p_name = project_details[0]["p_name"]
                 if user_details and project_details:
-                    subject = 'MyRemoteDesk - Project was Assigned to you'
-                    message = f'Hi, {s_name} You are asssigned to project {s_p_name} Check on MyRemoteDesk !'
+                    subject = 'MyRemoteDesk - Batch was Assigned to you'
+                    message = f'Hi, {s_name} You are asssigned to Batch {s_p_name} Check on MyRemoteDesk !'
                     email_from = settings.EMAIL_HOST_USER
                     recipient_list = [s_email]
                     send_mail(subject, message, email_from, recipient_list)
@@ -705,7 +707,7 @@ def unassign_emp(request, eid):
         o_id = request.session['o_id']
         pid = request.POST['p_id']
         emp_detail = Project_Employee_Linker.objects.filter(o_id_id=o_id, e_id_id=eid, p_id_id=pid).delete()
-        return redirect('/unassign_employee')
+        return redirect('/select-unassign')
 
 ###########################################
 
@@ -906,14 +908,16 @@ def overview_task(request):
         context = {"board_details": board_details,'org_board_names':org_board_names, 'priority':'any', 'status':'any'}
         return render(request, 'OverviewTasks.html', context)
 
-#create task
+
 @org_login_required
 def create_task(request):
     o_id = request.session['o_id']
     boards = Board.objects.filter(o_id_id=o_id).values()
     projects = Project.objects.filter(o_id_id=o_id).values()
     employees = Employee.objects.filter(o_id_id=o_id).values()
+    
     context = {"boards": boards, "projects": projects, "employees": employees}
+
     if request.method == 'POST':
         t_name = request.POST['t_name']
         t_desc = request.POST['t_desc']
@@ -923,22 +927,101 @@ def create_task(request):
         t_priority = request.POST['t_priority']
         b_id = request.POST['b_id']
         p_id = request.POST['p_id']
-        e_id = request.POST['e_id']
-        taskObj = Task.objects.create(t_name=t_name, t_desc=t_desc, t_assign_date=t_assign_date, t_deadline_date=t_deadline_date,
-                                      t_status=t_status, t_priority=t_priority, o_id_id=o_id, b_id_id=b_id, p_id_id=p_id, e_id_id=e_id)
+
+        # Create Task
+        taskObj = Task.objects.create(
+            t_name=t_name, t_desc=t_desc, t_assign_date=t_assign_date, 
+            t_deadline_date=t_deadline_date, t_status=t_status, 
+            t_priority=t_priority, o_id_id=o_id, b_id_id=b_id, p_id_id=p_id
+        )
+
         if taskObj:
-            empDetails = Employee.objects.filter(id=e_id, o_id_id=o_id).values()
-            subject = 'MyRemoteDesk - New Task Created for you'
-            message = f'Hi {empDetails[0]["e_name"]} , Your organization as created a new task : {t_name} , description : {t_desc}, priority : {t_priority} and deadline for task is : {t_deadline_date}, Login in your account to get more information. From: MyRemoteDesk. '
+            # Fetch employee IDs assigned to the selected project
+            emp_ids = Project_Employee_Linker.objects.filter(
+                p_id_id=p_id, o_id_id=o_id
+            ).values_list('e_id_id', flat=True)
+
+            # Get employee details
+            empDetails = Employee.objects.filter(id__in=emp_ids)
+            taskObj.e_id.set(empDetails)
+
+            # Send emails to employees
+            subject = 'MyRemoteDesk - New Task Created for You'
             email_from = settings.EMAIL_HOST_USER
-            recipient_list = [empDetails[0]["e_email"], ]
-            send_mail(subject, message, email_from, recipient_list)
-            messages.success(request, "Task was created successfully!")
+            
+            for emp in empDetails:
+                message = f"""
+                Hello {emp.e_name},
+
+                A new task '{t_name}' has been assigned to you.
+
+                Description: {t_desc}
+                Priority: {t_priority}
+                Deadline: {t_deadline_date}
+
+                Please log in to MyRemoteDesk to view and manage your task.
+
+                Regards,
+                MyRemoteDesk Team
+
+                Developed by: Pramod, Siddappa, Yugant, Prathamesh
+                """
+                send_mail(subject, message, email_from, [emp.e_email])
+
+            messages.success(request, "Task was created successfully and emails were sent!")
             return HttpResponseRedirect('/create-task')
+
         else:
-            messages.error(request, "Some Error was occurred!")
+            messages.error(request, "An error occurred while creating the task.")
             return HttpResponseRedirect('/create-task')
+
     return render(request, 'CreateTask.html', context)
+
+
+# @org_login_required
+# def create_task(request):
+#     o_id = request.session['o_id']
+#     boards = Board.objects.filter(o_id_id=o_id).values()
+#     projects = Project.objects.filter(o_id_id=o_id).values()
+#     context = {"boards": boards, "projects": projects}
+
+#     if request.method == 'POST':
+#         t_name = request.POST['t_name']
+#         t_desc = request.POST['t_desc']
+#         t_assign_date = request.POST['t_assign_date']
+#         t_deadline_date = request.POST['t_deadline_date']
+#         t_status = "todo"
+#         t_priority = request.POST['t_priority']
+#         b_id = request.POST['b_id']
+#         p_id = request.POST['p_id']
+
+#         # Create the task
+#         taskObj = Task.objects.create(
+#             t_name=t_name, t_desc=t_desc, t_assign_date=t_assign_date,
+#             t_deadline_date=t_deadline_date, t_status=t_status,
+#             t_priority=t_priority, o_id_id=o_id, b_id_id=b_id, p_id_id=p_id
+#         )
+
+#         if taskObj:
+#             # Fetch all employees under the selected batch
+#             employees = Employee.objects.filter(b_id=b_id, o_id_id=o_id).values()
+            
+#             subject = 'MyRemoteDesk - New Task Created'
+#             email_from = settings.EMAIL_HOST_USER
+
+            # for emp in employees:
+            #     message = f'Hi {emp["e_name"]}, Your organization has created a new task: {t_name}, description: {t_desc}, priority: {t_priority}, and deadline for the task is: {t_deadline_date}. Login to your account for more information. From: MyRemoteDesk.'
+            #     send_mail(subject, message, email_from, [emp["e_email"]])
+
+#             messages.success(request, "Task was created successfully!")
+#             return HttpResponseRedirect('/create-task')
+#         else:
+#             messages.error(request, "Some Error occurred!")
+#             return HttpResponseRedirect('/create-task')
+
+#     return render(request, 'CreateTask.html', context)
+
+
 
 #view and edit task
 @org_login_required
@@ -977,7 +1060,16 @@ def create_meet(request):
                     subject = 'MyRemoteDesk - New Meeting'
                     s_name = ud['e_name']
                     s_email = ud['e_email']
-                    message = f'Hi, {s_name} New Meeting for created for you! Details are Meeting Name :{m_name}, Meeting Description: {m_desc}, Date Time: {start_date} {start_time} Check on MyRemoteDesk !'
+                    message = f"""Hi, {s_name} 
+                    New Meeting created for you! Details are 
+                    Meeting Name :{m_name}, 
+                    Meeting Description: {m_desc},
+                    Date Time: {start_date} {start_time}
+                    Check on MyRemoteDesk
+                    Regards,
+                    MyRemoteDesk Team
+
+                    Developed by: Pramod, Siddappa, Yugant, Prathamesh"""
                     email_from = settings.EMAIL_HOST_USER
                     recipient_list = [s_email]
                     send_mail(subject, message, email_from, recipient_list)
@@ -1207,14 +1299,28 @@ def user_index(request):
 def user_profile(request):
     if request.method == 'GET':
         o_id = request.session['u_oid']
-        e_id = request.session['u_id']
+        e_id = request.session['u_id']  # Logged-in Employee ID
+        
+        # Fetch Employee Details
         emp_details = Employee.objects.filter(o_id_id=o_id, id=e_id).first()
-        count_no_of_total_tasks = Task.objects.filter(o_id_id=o_id, e_id_id=e_id).count()
-        count_no_of_completed_tasks = Task.objects.filter(o_id_id=o_id, e_id_id=e_id, t_status="completed").count()
+
+        # Get all tasks assigned to the employee (Many-to-Many filter)
+        assigned_tasks = Task.objects.filter(o_id_id=o_id, e_id__id=e_id)
+        count_no_of_total_tasks = assigned_tasks.count()
+        count_no_of_completed_tasks = assigned_tasks.filter(t_status="completed").count()
         count_no_of_pending_tasks = count_no_of_total_tasks - count_no_of_completed_tasks
+
+        # Get projects where the employee is linked
         pel_details = Project_Employee_Linker.objects.filter(o_id_id=o_id, e_id_id=e_id).values_list('p_id_id', flat=True)
         project_details = Project.objects.filter(id__in=pel_details).values()
-        return render(request, 'EmpProfile.html', {"msg": emp_details, "msg1": count_no_of_total_tasks, "msg2": count_no_of_completed_tasks, "msg3": count_no_of_pending_tasks, "msg4": project_details})
+
+        return render(request, 'EmpProfile.html', {
+            "msg": emp_details,
+            "msg1": count_no_of_total_tasks,
+            "msg2": count_no_of_completed_tasks,
+            "msg3": count_no_of_pending_tasks,
+            "msg4": project_details
+        })
 
 ############# Notice view ######################
 @user_login_required

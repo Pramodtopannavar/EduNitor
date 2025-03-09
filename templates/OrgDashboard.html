@@ -92,7 +92,7 @@
                         data-bs-toggle="collapse" data-bs-target="#submenu-components">
                         <span>
                             <span class="sidebar-icon"><span class="fas fa-plus"></span></span>
-                            <span class="sidebar-text">Employee</span>
+                            <span class="sidebar-text">Student</span>
                         </span>
                         <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
                     </span>
@@ -100,7 +100,7 @@
                         <ul class="flex-column nav">
                             <li class="nav-item">
                                 <a class="nav-link" href="/create-emp">
-                                    <span class="sidebar-text">Add</span>
+                                    <span class="sidebar-text">Add Student</span>
                                 </a>
                             </li>
                             <li class="nav-item ">
@@ -115,7 +115,7 @@
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link" href="/emp-leaves">
-                                    <span class="sidebar-text">Employee Leaves</span>
+                                    <span class="sidebar-text">Student Leaves</span>
                                 </a>
                             </li>
                         </ul>
@@ -160,7 +160,7 @@
                         data-bs-toggle="collapse" data-bs-target="#submenu-components4">
                         <span>
                             <span class="sidebar-icon"><span class="fas fa-plus"></span></span>
-                            <span class="sidebar-text">Projects</span>
+                            <span class="sidebar-text">Batch</span>
                         </span>
                         <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
                     </span>
@@ -168,22 +168,22 @@
                         <ul class="flex-column nav">
                             <li class="nav-item">
                                 <a class="nav-link" href="/create-proj">
-                                    <span class="sidebar-text">Create Projects</span>
+                                    <span class="sidebar-text">Create Batch</span>
                                 </a>
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link" href="/read-proj">
-                                    <span class="sidebar-text">View Projects</span>
+                                    <span class="sidebar-text">View Batch</span>
                                 </a>
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link" href="/assign-proj">
-                                    <span class="sidebar-text">Assign Projects</span>
+                                    <span class="sidebar-text">Assign Students</span>
                                 </a>
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link" href="/select-unassign">
-                                    <span class="sidebar-text">Unassign Projects</span>
+                                    <span class="sidebar-text">Unassign Students</span>
                                 </a>
                             </li>
                         </ul>
@@ -194,7 +194,7 @@
                         data-bs-toggle="collapse" data-bs-target="#submenu-components5">
                         <span>
                             <span class="sidebar-icon"><span class="fas fa-plus"></span></span>
-                            <span class="sidebar-text">Boards</span>
+                            <span class="sidebar-text">Class</span>
                         </span>
                         <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
                     </span>
@@ -202,12 +202,12 @@
                         <ul class="flex-column nav">
                             <li class="nav-item">
                                 <a class="nav-link" href="/create-board">
-                                    <span class="sidebar-text">Add Board</span>
+                                    <span class="sidebar-text">Add Class</span>
                                 </a>
                             </li>
                             <li class="nav-item ">
                                 <a class="nav-link" href="/read-boards">
-                                    <span class="sidebar-text">View Boards</span>
+                                    <span class="sidebar-text">View Class</span>
                                 </a>
                             </li>
                         </ul>
@@ -424,11 +424,11 @@
                         success: function (response) {
                             if (response == "success") {
                                 console.log(response);
-                                window.location.href = "http://localhost:8000/";
+                                window.location.href = "http://localhost:3031/";
                             }
                             else {
                                 console.log("logout: error");
-                                window.location.href = "http://localhost:8000/";
+                                window.location.href = "http://localhost:3031/";
                             }
                         }
                     });

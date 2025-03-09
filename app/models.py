@@ -59,8 +59,8 @@ class Task(models.Model):
     b_id = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='boardids')
     p_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projectids')
     o_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    e_id = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='employeeids')
     
+    e_id = models.ManyToManyField(Employee)
     class Meta:
         db_table = "task"
 
