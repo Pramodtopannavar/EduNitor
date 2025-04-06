@@ -60,7 +60,7 @@ class Task(models.Model):
     p_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projectids')
     o_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
     
-    e_id = models.ManyToManyField(Employee)
+    # e_id = models.ManyToManyField(Employee)
     class Meta:
         db_table = "task"
 
@@ -172,3 +172,15 @@ class Leaves(models.Model):
 
     class Meta:
         db_table = "leaves"
+
+class TaskAssignment(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, default='pending')
+    updated_date = models.DateField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.task.t_name} - {self.employee.e_name} ({self.status})"
+    
+    class Meta:
+        db_table = "TaskAssignment"

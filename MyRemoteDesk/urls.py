@@ -67,8 +67,14 @@ urlpatterns = [
     ######### under project options ########
     path('create-proj',av.create_proj),
     path('read-proj', av.read_proj),
-    # unnder the view  project two options to view,delete
-    path('projectwise-tasks/<int:pid>', av.projectwise_task),
+    
+    # ✅ First step: View list of tasks in a project
+    path('projectwise-tasks/<int:pid>', av.view_project_tasks, name='view_project_tasks'),
+
+    # ✅ Second step: Dashboard of that project
+    # path('project-dashboard/<int:pid>', av.projectwise_task, name='projectwise_task'),
+    path('project-dashboard/<int:task_id>/<int:result_id>/', av.projectwise_task, name='projectwise_task'),
+
     path('del-proj/<int:pid>', av.del_proj),
     #view page options
     path('update-task/<int:pk>/', av.update_task, name="update-task"),
@@ -134,7 +140,7 @@ urlpatterns = [
     path('get_emps_not_in_project/<int:pid>', av.get_emps_not_in_project),
     
 
-    path('emp-update-tasks/<int:tid>', av.emp_update_tasks),
+    
     
  
     
@@ -164,6 +170,7 @@ urlpatterns = [
     path('user-projectwise-tasks/<int:pid>', av.user_projectwise_task),
     path('user-overview-task', av.user_overview_task),
     path('emp-view-tasks', av.emp_view_tasks),
+    path('emp-update-tasks/<int:tid>', av.emp_update_tasks),
     path('user-view-attendance', av.user_view_attendance),
     path('user-apply-emp-leaves', av.user_apply_emp_leaves),
     path('user-view-emp-leaves', av.user_view_emp_leaves),

@@ -23,7 +23,7 @@
                                     <select class="custom-select my-1 mr-sm-2" id="inlineFormCustomSelectPref" name="t_status_filter" required>
                                         <option value="any">Any
                                         </option>
-                                        <option value="todo">Todo
+                                        <option value="pending">Todo
                                         </option>
                                         <option value="completed">Completed
                                         </option>
@@ -35,52 +35,64 @@
 <div class="container-fluid kanban-container py-4 px-0">
     <div class="row d-flex flex-nowrap">
         {% for board in board_details %}
-        <div class="col-12 col-lg-6 col-xl-4 col-xxl-3">
-            <div class="card border-0 shadow p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h2 fw-bold mb-0 d-flex justify-content-center">{{ board.b_name|upper }}</h2>
-            </div>
-            <div id="kanbanColumn1" class="list-group kanban-list">
-                {% for task in board.boardids.all %}
+<div class="col-12 col-lg-6 col-xl-4 col-xxl-3">
+    <div class="card border-0 shadow p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h2 fw-bold mb-0 d-flex justify-content-center">{{ board.b_name|upper }}</h2>
+        </div>
+        <div id="kanbanColumn1" class="list-group kanban-list">
+            
+            {% for assignment in task_assignments %}
+                {% if assignment.task.b_id.id == board.id %}
                 <div class="card border-1 shadow p-4">
                     <div class="card-header d-flex align-items-center justify-content-between border-0 p-0 mb-2">
-                        <h3 class="h3 mb-0">{{task.t_name|upper}}</h3>
+                        <h3 class="h3 mb-0">{{ assignment.task.t_name|upper }}</h3>
                     </div>
                     <div class="card-body p-0">
-                        <p>{{task.t_desc}}</p>
+                        <p>{{ assignment.task.t_desc }}</p>
 
                         <h4 class="fs-6 fw-normal mt-4"><b>Batch:</b>
-                            {{task.p_id.p_name|upper}}</h4>
+                            {{ assignment.task.p_id.p_name|upper }}</h4>
 
-                        <h4 class="fs-6 fw-normal mt-4"><b>Assigned:</b>
-                            {% for employee in task.e_id.all %}
-                            {{ employee.e_name|upper }}{% if not forloop.last %}, {% endif %}
-                        {% empty %}
-                            No employees assigned
-                        {% endfor %}</h4>
+                        <h4 class="fs-6 fw-normal mt-4"><b>Assigned To:</b>
+                            {{ assignment.employee.e_name|upper }}</h4>
+
                         <h4 class="fs-6 fw-normal mt-4"><b>Priority:</b>
-                                                            {% if task.t_priority == "High Priority" %}
-                                                        <span class="badge bg-danger">High</span>
-                                                            {% elif task.t_priority == "Medium Priority" %}
-                                                        <span class="badge bg-warning">Medium</span>
-                                                            {% elif task.t_priority == "Low Priority" %}
-                                                        <span class="badge bg-info">Low</span>
-                                                            {% endif %}  
+                            {% if assignment.task.t_priority == "High Priority" %}
+                                <span class="badge bg-danger">High</span>
+                            {% elif assignment.task.t_priority == "Medium Priority" %}
+                                <span class="badge bg-warning">Medium</span>
+                            {% elif assignment.task.t_priority == "Low Priority" %}
+                                <span class="badge bg-info">Low</span>
+                            {% endif %}
                         </h4>
-                        <h5 class="fs-6 fw-normal mt-4"><b>Assigned Date:</b>
-                          {{task.t_assign_date}} 
+
+                        <h5 class="fs-6 fw-normal mt-4"><b>Status:</b>
+                            {% if assignment.status == "todo" %}
+                                <span class="badge bg-secondary">Todo</span>
+                            {% elif assignment.status == "completed" %}
+                                <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-dark">{{ assignment.status }}</span>
+                            {% endif %}
                         </h5>
-                        <h5 class="fs-6 fw-normal mt-4"><b>Deadline Date:</b>
-                            {{ task.t_deadline_date}}
-                        </h5>
+
+                        <h5 class="fs-6 fw-normal mt-4"><b>Assigned Date:</b> {{ assignment.task.t_assign_date }}</h5>
+                        <h5 class="fs-6 fw-normal mt-4"><b>Deadline Date:</b> {{ assignment.task.t_deadline_date }}</h5>
+                        <h5 class="fs-6 fw-normal mt-4"><b>Last Updated:</b> {{ assignment.updated_date }}</h5>
                     </div>
                 </div>
                 <br>
-                {% endfor %}
-            </div>
-            </div>
+                {% endif %}
+            {% empty %}
+                <p>No tasks available for this board.</p>
+            {% endfor %}
+
         </div>
-        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
         <br>
         <br>
     </div>

@@ -31,8 +31,9 @@
                                             {{task.p_id.p_name|upper}}</h4>
 
                                         <h4 class="fs-6 fw-normal mt-4"><b>Assigned:</b>
-                                            {% for employee in task.e_id.all %}
-                            {{ employee.e_name|upper }}{% if not forloop.last %}, {% endif %}
+                                            {% for assignment in task_assignments %}
+                                            {{ assignment.employee.e_name|upper }}
+                                            {% if not forloop.last %}, {% endif %}
                         {% empty %}
                             No employees assigned
                         {% endfor %}</h4>

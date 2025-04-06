@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from matplotlib.style import use
 
-from .models import AttendanceLogs, Board, Employee, Meeting, Monitoring, MonitoringDetails, Organization, OrganizationNews, PowerMonitoring, Project, Project_Employee_Linker, ScreenShotsMonitoring, Task, WorkProductivityDataset, Leaves
+from .models import AttendanceLogs, Board, Employee, Meeting, Monitoring, MonitoringDetails, Organization, OrganizationNews, PowerMonitoring, Project, Project_Employee_Linker, ScreenShotsMonitoring, Task, WorkProductivityDataset, Leaves,TaskAssignment
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.conf import settings
@@ -560,7 +560,7 @@ def power_monitoring(request):
 
 ##############################################
 
-############## Projects ######################
+############## Projects / Batches ######################
 
 #create project
 @org_login_required
@@ -590,33 +590,97 @@ def read_proj(request):
         project_details = Project.objects.filter(o_id_id=request.session['o_id']).values()
         return render(request, 'ViewProjects.html', {"msg": project_details})
 
+
+@org_login_required
+def view_project_tasks(request, pid):
+    o_id = request.session['o_id']
+    tasks = Task.objects.filter(o_id_id=o_id, p_id_id=pid)
+    project = Project.objects.get(id=pid, o_id_id=o_id)
+    return render(request, 'ProjectTasksList.html', {'project': project, 'tasks': tasks})
+
+
 #under view paage to view the tasks
 @org_login_required
-def projectwise_task(request,pid):
-    if request.method == 'GET':
-        o_id = request.session['o_id']
-        project_details = Project.objects.filter(o_id_id=o_id, id=pid).all()
-        tasks = Task.objects.filter(o_id_id=o_id, p_id_id=pid).all()
-        count_no_of_total_tasks = Task.objects.filter(o_id_id=o_id, p_id_id=pid).count()
-        count_no_of_completed_tasks = Task.objects.filter(o_id_id=o_id, p_id_id=pid, t_status="completed").count()
-        count_no_of_pending_tasks = count_no_of_total_tasks - count_no_of_completed_tasks
-        if tasks:
-            tasklist = []
-            for task in tasks:
-                Dict = {}
-                Dict["Task"] = task.t_name
-                Dict["Start"] = task.t_assign_date
-                Dict["Finish"] = task.t_deadline_date
-                Dict["Resource"] = task.t_priority
-                tasklist.append(Dict)
-            df = pd.DataFrame(tasklist)
-            fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Resource")
-            fig.update_yaxes(autorange="reversed")
-            plot_div = plot(fig, output_type='div')
-            context = {"project_details": project_details, 'plot_div': plot_div, 'task_total': count_no_of_total_tasks, 'task_completed': count_no_of_completed_tasks, 'task_pending': count_no_of_pending_tasks }
-            return render(request, 'ViewProjectwiseTasks.html', context)
-        else:
-            return render(request, 'ViewProjectwiseTasks.html')
+def projectwise_task(request, task_id, result_id):
+    project = Project.objects.get(id=result_id)
+    tasks = Task.objects.filter(p_id=project)
+
+    assignments = TaskAssignment.objects.filter(task_id=task_id).select_related('task', 'employee')
+    completed = assignments.filter(status='Completed').count()
+    pending = assignments.filter(status='Pending').count()
+
+    # Build tasklist for Gantt chart
+    tasklist = []
+    for assignment in assignments:
+        tasklist.append({
+            "Task": assignment.employee.e_name,
+            "Start": assignment.task.t_assign_date,
+            "Finish": assignment.task.t_deadline_date,
+            "Resource": assignment.status.capitalize(),
+        })
+
+    df = pd.DataFrame(tasklist)
+    if not df.empty:
+        fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Resource", title="Task Assignment Timeline")
+        fig.update_yaxes(autorange="reversed")  # Tasks top-down
+        plot_div = plot(fig, output_type='div')
+    else:
+        plot_div = "<p>No data available to plot.</p>"
+
+    project_details = [{
+        "project": project,
+        "projectids": tasks
+    }]
+
+    context = {
+        'task_id': task_id,
+        'project_details': project_details,
+        'task_data': assignments,
+        'plot_div': plot_div,
+        'task_completed': completed,
+        'task_pending': pending,
+    }
+    return render(request, 'ViewProjectwiseTasks.html', context)
+
+
+# def projectwise_task(request, pid):
+#     o_id = request.session['o_id']
+#     project_details = Project.objects.filter(o_id_id=o_id, id=pid)
+#     tasks = Task.objects.filter(o_id_id=o_id, p_id_id=pid)
+
+#     # Fix: get status counts directly from this task list
+#     count_no_of_total_tasks = tasks.count()
+#     count_no_of_completed_tasks = tasks.filter(t_status="completed").count()
+#     count_no_of_pending_tasks = count_no_of_total_tasks - count_no_of_completed_tasks
+
+#     task_assignments = TaskAssignment.objects.filter(task__in=tasks).select_related('task', 'employee')
+
+#     # Chart logic
+#     if tasks:
+#         tasklist = [{
+#             "Task": task.t_name,
+#             "Start": task.t_assign_date,
+#             "Finish": task.t_deadline_date,
+#             "Resource": task.t_priority
+#         } for task in tasks]
+
+#         df = pd.DataFrame(tasklist)
+#         fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Resource")
+#         fig.update_yaxes(autorange="reversed")
+#         plot_div = plot(fig, output_type='div')
+
+#         context = {
+#             "project_details": project_details,
+#             "plot_div": plot_div,
+#             "task_total": count_no_of_total_tasks,
+#             "task_completed": count_no_of_completed_tasks,
+#             "task_pending": count_no_of_pending_tasks,
+#             "task_assignments": task_assignments
+#         }
+#         return render(request, 'ViewProjectwiseTasks.html', context)
+    
+#     return render(request, 'ViewProjectwiseTasks.html', {"project_details": project_details})
+
 
 
 # delete task under view page
@@ -711,7 +775,7 @@ def unassign_emp(request, eid):
 
 ###########################################
 
-########## Board option ###################
+########## Board option // Class  ###################
 
 #create board
 @org_login_required
@@ -896,18 +960,36 @@ def rank_productivity(request):
 @org_login_required
 def overview_task(request):
     o_id = request.session['o_id']
+    
+    # Get all boards and board names for dropdown etc.
     board_details = Board.objects.filter(o_id_id=o_id).all()
-    org_board_names = list(Board.objects.filter(o_id_id=o_id).values_list('b_name',flat=True))
-    if request.method == "POST":
-        priority = request.POST['t_priority_filter']
-        status = request.POST['t_status_filter']
-        context = {"board_details": board_details, 'org_board_names':org_board_names, 'priority':priority, 'status':status}
-        return render(request, 'OverviewTasks.html', context)
-    else:      
-        board_details = Board.objects.filter(o_id_id=o_id).all()
-        context = {"board_details": board_details,'org_board_names':org_board_names, 'priority':'any', 'status':'any'}
-        return render(request, 'OverviewTasks.html', context)
+    org_board_names = list(Board.objects.filter(o_id_id=o_id).values_list('b_name', flat=True))
 
+    # Fetch all task assignments for the organization
+    task_assignments = TaskAssignment.objects.filter(task__o_id_id=o_id).select_related('task', 'employee')
+
+    priority_filter = 'any'
+    status_filter = 'any'
+
+    if request.method == "POST":
+        priority_filter = request.POST['t_priority_filter']
+        status_filter = request.POST['t_status_filter']
+
+        # Apply filters if selected
+        if priority_filter != 'any':
+            task_assignments = task_assignments.filter(task__t_priority=priority_filter)
+        if status_filter != 'any':
+            task_assignments = task_assignments.filter(status=status_filter)
+
+    context = {
+        "board_details": board_details,
+        "org_board_names": org_board_names,
+        "priority": priority_filter,
+        "status": status_filter,
+        "task_assignments": task_assignments
+    }
+
+    return render(request, 'OverviewTasks.html', context)
 
 @org_login_required
 def create_task(request):
@@ -915,7 +997,7 @@ def create_task(request):
     boards = Board.objects.filter(o_id_id=o_id).values()
     projects = Project.objects.filter(o_id_id=o_id).values()
     employees = Employee.objects.filter(o_id_id=o_id).values()
-    
+
     context = {"boards": boards, "projects": projects, "employees": employees}
 
     if request.method == 'POST':
@@ -930,9 +1012,15 @@ def create_task(request):
 
         # Create Task
         taskObj = Task.objects.create(
-            t_name=t_name, t_desc=t_desc, t_assign_date=t_assign_date, 
-            t_deadline_date=t_deadline_date, t_status=t_status, 
-            t_priority=t_priority, o_id_id=o_id, b_id_id=b_id, p_id_id=p_id
+            t_name=t_name,
+            t_desc=t_desc,
+            t_assign_date=t_assign_date,
+            t_deadline_date=t_deadline_date,
+            t_status=t_status,
+            t_priority=t_priority,
+            o_id_id=o_id,
+            b_id_id=b_id,
+            p_id_id=p_id
         )
 
         if taskObj:
@@ -943,12 +1031,15 @@ def create_task(request):
 
             # Get employee details
             empDetails = Employee.objects.filter(id__in=emp_ids)
-            taskObj.e_id.set(empDetails)
 
-            # Send emails to employees
+            # Create TaskAssignment entries
+            for emp in empDetails:
+                TaskAssignment.objects.create(task=taskObj, employee=emp)
+
+            # Send email notifications
             subject = 'MyRemoteDesk - New Task Created for You'
             email_from = settings.EMAIL_HOST_USER
-            
+
             for emp in empDetails:
                 message = f"""
                 Hello {emp.e_name},
@@ -976,6 +1067,75 @@ def create_task(request):
             return HttpResponseRedirect('/create-task')
 
     return render(request, 'CreateTask.html', context)
+
+
+# @org_login_required
+# def create_task(request):
+#     o_id = request.session['o_id']
+#     boards = Board.objects.filter(o_id_id=o_id).values()
+#     projects = Project.objects.filter(o_id_id=o_id).values()
+#     employees = Employee.objects.filter(o_id_id=o_id).values()
+    
+#     context = {"boards": boards, "projects": projects, "employees": employees}
+
+#     if request.method == 'POST':
+#         t_name = request.POST['t_name']
+#         t_desc = request.POST['t_desc']
+#         t_assign_date = request.POST['t_assign_date']
+#         t_deadline_date = request.POST['t_deadline_date']
+#         t_status = "todo"
+#         t_priority = request.POST['t_priority']
+#         b_id = request.POST['b_id']
+#         p_id = request.POST['p_id']
+
+#         # Create Task
+#         taskObj = Task.objects.create(
+#             t_name=t_name, t_desc=t_desc, t_assign_date=t_assign_date, 
+#             t_deadline_date=t_deadline_date, t_status=t_status, 
+#             t_priority=t_priority, o_id_id=o_id, b_id_id=b_id, p_id_id=p_id
+#         )
+
+#         if taskObj:
+#             # Fetch employee IDs assigned to the selected project
+#             emp_ids = Project_Employee_Linker.objects.filter(
+#                 p_id_id=p_id, o_id_id=o_id
+#             ).values_list('e_id_id', flat=True)
+
+#             # Get employee details
+#             empDetails = Employee.objects.filter(id__in=emp_ids)
+#             taskObj.e_id.set(empDetails)
+
+#             # Send emails to employees
+#             subject = 'MyRemoteDesk - New Task Created for You'
+#             email_from = settings.EMAIL_HOST_USER
+            
+#             for emp in empDetails:
+#                 message = f"""
+#                 Hello {emp.e_name},
+
+#                 A new task '{t_name}' has been assigned to you.
+
+#                 Description: {t_desc}
+#                 Priority: {t_priority}
+#                 Deadline: {t_deadline_date}
+
+#                 Please log in to MyRemoteDesk to view and manage your task.
+
+#                 Regards,
+#                 MyRemoteDesk Team
+
+#                 Developed by: Pramod, Siddappa, Yugant, Prathamesh
+#                 """
+#                 send_mail(subject, message, email_from, [emp.e_email])
+
+#             messages.success(request, "Task was created successfully and emails were sent!")
+#             return HttpResponseRedirect('/create-task')
+
+#         else:
+#             messages.error(request, "An error occurred while creating the task.")
+#             return HttpResponseRedirect('/create-task')
+
+#     return render(request, 'CreateTask.html', context)
 
 
 # @org_login_required
@@ -1028,8 +1188,13 @@ def create_task(request):
 def read_tasks(request):
     o_id = request.session['o_id']
     board_details = Board.objects.filter(o_id_id=o_id).all()
+    task_assignments = TaskAssignment.objects.filter(task__o_id_id=o_id).select_related('task', 'employee')
+    context = {
+        "board_details": board_details,
+        "task_assignments": task_assignments
+    }
     if request.method == 'GET':
-        return render(request, 'ViewTasks.html', {"board_details": board_details})
+        return render(request, 'ViewTasks.html', context)
     else:
         return render(request, 'ViewTasks.html')
 
@@ -1287,6 +1452,8 @@ def org_change_password(request):
 
 ########################################################
 
+#Student
+
 ####################################################################################################################################################
 #employee login
 @user_login_required
@@ -1425,7 +1592,7 @@ def user_work_productivity_check(request):
     else:
         return render(request, 'EmpSelectWp.html')
 
-########## Project overview ###################
+########## Project overview // BAtch overview ###################
 #project
 @user_login_required
 def user_view_projects(request):
@@ -1438,51 +1605,136 @@ def user_view_projects(request):
 
 # view project wise tasks
 @user_login_required
-def user_projectwise_task(request,pid):
+def user_projectwise_task(request, pid):
     if request.method == 'GET':
         o_id = request.session['u_oid']
         e_id = request.session['u_id']
+
         project_details = Project.objects.filter(o_id_id=o_id, id=pid).all()
-        tasks = Task.objects.filter(o_id_id=o_id, p_id_id=pid, e_id_id=e_id).all()
-        count_no_of_total_tasks = Task.objects.filter(o_id_id=o_id, e_id_id=e_id,  p_id_id=pid).count()
-        count_no_of_completed_tasks = Task.objects.filter(o_id_id=o_id, e_id_id=e_id, p_id_id=pid, t_status="completed").count()
+
+        # Get all task assignments for the logged-in employee and selected project
+        assignments = TaskAssignment.objects.filter(
+            task__o_id_id=o_id,
+            task__p_id_id=pid,
+            employee_id=e_id
+        ).select_related('task')  # for performance
+
+        count_no_of_total_tasks = assignments.count()
+        count_no_of_completed_tasks = assignments.filter(status="completed").count()
         count_no_of_pending_tasks = count_no_of_total_tasks - count_no_of_completed_tasks
-        if tasks:
+
+        if assignments.exists():
             tasklist = []
-            for task in tasks:
-                Dict = {}
-                Dict["Task"] = task.t_name
-                Dict["Start"] = task.t_assign_date
-                Dict["Finish"] = task.t_deadline_date
-                Dict["Resource"] = task.t_priority
-                tasklist.append(Dict)
+            for assign in assignments:
+                task = assign.task
+                tasklist.append({
+                    "Task": task.t_name,
+                    "Start": task.t_assign_date,
+                    "Finish": task.t_deadline_date,
+                    "Resource": task.t_priority
+                })
+
             df = pd.DataFrame(tasklist)
             fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", color="Resource")
             fig.update_yaxes(autorange="reversed")
             plot_div = plot(fig, output_type='div')
-            context = {"project_details": project_details, 'plot_div': plot_div, 'task_total': count_no_of_total_tasks,
-                       'task_completed': count_no_of_completed_tasks, 'task_pending': count_no_of_pending_tasks}
+
+            context = {
+                "project_details": project_details,
+                "plot_div": plot_div,
+                "task_total": count_no_of_total_tasks,
+                "task_completed": count_no_of_completed_tasks,
+                "task_pending": count_no_of_pending_tasks,
+                "task_data": assignments
+            }
             return render(request, 'EmpViewProjectwiseTasks.html', context)
         else:
-            return render(request, 'EmpViewProjectwiseTasks.html')
+            return render(request, 'EmpViewProjectwiseTasks.html', {
+                "project_details": project_details,
+                "task_total": 0,
+                "task_completed": 0,
+                "task_pending": 0,
+                "task_data": []
+            })
 
-#task overview
+# Task Overview
 @user_login_required
 def user_overview_task(request):
     if request.method == "GET":
-        o_id = request.session['u_oid']
-        board_details = Board.objects.filter(o_id_id=o_id).all()
+        o_id = request.session.get('u_oid')
+        u_id = request.session.get('u_id')
+
+        # Get all boards under this organization
+        board_details = Board.objects.filter(o_id_id=o_id)
+
+        # For each board, get tasks assigned to this employee through TaskAssignment
+        for board in board_details:
+            # Get all tasks in this board
+            tasks_in_board = board.boardids.all()
+
+            # Get only the tasks assigned to the current employee
+            assigned_tasks = TaskAssignment.objects.filter(
+                task__in=tasks_in_board,
+                employee_id=u_id
+            ).select_related('task')
+
+            # Store the actual Task objects for this board
+            board.tasks_for_user = [assign.task for assign in assigned_tasks]
+
         context = {"board_details": board_details}
         return render(request, 'EmpOverviewTasks.html', context)
 
-#tasks
+
+# Task
 @user_login_required
 def emp_view_tasks(request):
     if request.method == 'GET':
-        o_id = request.session['u_oid']
-        board_details = Board.objects.filter(o_id_id=o_id).all()
+        o_id = request.session.get('u_oid')
+        u_id = request.session.get('u_id')
+        board_details = Board.objects.filter(o_id_id=o_id)
+
+        for board in board_details:
+            tasks_in_board = board.boardids.all()
+
+            # Filter assignments for this board's tasks and this user
+            user_assignments = TaskAssignment.objects.filter(
+                task__in=tasks_in_board,
+                employee_id=u_id
+            ).select_related('task')
+
+            # Attach assignment status to each task
+            tasks_with_status = []
+            for assignment in user_assignments:
+                task = assignment.task
+                task.assignment_status = assignment.status  # Attach employee-specific status
+                tasks_with_status.append(task)
+
+            board.tasks_for_user = tasks_with_status  # Add filtered tasks to board
+
         context = {"board_details": board_details}
         return render(request, 'EmpViewTask.html', context)
+
+
+
+@user_login_required
+def emp_update_tasks(request, tid):
+    o_id = request.session['u_oid']
+    e_id = request.session['u_id']
+    t_update_date = datetime.datetime.today().strftime('%Y-%m-%d')
+
+    # Get the TaskAssignment entry for the given task and employee
+    assignment = TaskAssignment.objects.filter(task_id=tid, employee_id=e_id, task__o_id_id=o_id).first()
+
+    if assignment:
+        assignment.status = "completed"
+        assignment.updated_date = t_update_date
+        assignment.save()
+        messages.success(request, "Task marked as completed!")
+    else:
+        messages.error(request, "You are not authorized or task not found!")
+
+    return HttpResponseRedirect('/emp-view-tasks')
+
 
 ###################################################
 
@@ -1701,18 +1953,7 @@ def get_emps_by_project(request, pid):
 
 
 
-@user_login_required
-def emp_update_tasks(request, tid):
-    o_id = request.session['u_oid']
-    e_id = request.session['u_id']
-    t_update_date = datetime.datetime.today().strftime('%Y-%m-%d')
-    task_details = Task.objects.filter(id=tid, o_id_id=o_id, e_id_id=e_id).update(t_update_date=t_update_date, t_status="completed")
-    if task_details:
-        messages.success(request, "Task Mark as completed!")
-        return HttpResponseRedirect('/emp-view-tasks')
-    else:
-        messages.error(request, "Some error was occurred!")
-        return HttpResponseRedirect('/emp-view-tasks')
+
 
 
 

@@ -88,7 +88,7 @@ WSGI_APPLICATION = 'MyRemoteDesk.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'employee',
+        'NAME': 'Final_year',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
