@@ -86,8 +86,8 @@ class MonitoringDetails(models.Model):
         db_table = "MonitoringDetails"
 
 class ScreenShotsMonitoring(models.Model):
-    ssm_img = models.CharField(max_length=255)
-    ssm_log_ts = models.CharField(max_length=200)
+    ssm_img = models.TextField() 
+    ssm_log_ts = models.DateTimeField()
     e_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     o_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
 

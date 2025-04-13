@@ -18,7 +18,7 @@
                             <div class="card-body p-0">
                                 <p>{{ task.t_desc }}</p>
 
-                                <h4 class="fs-6 fw-normal mt-4"><b>Project:</b> {{ task.p_id.p_name|upper }}</h4>
+                                <h4 class="fs-6 fw-normal mt-4"><b>Batch:</b> {{ task.p_id.p_name|upper }}</h4>
 
                                 <h4 class="fs-6 fw-normal mt-4"><b>Assigned:</b>
                                     {% with task_assignments=task.taskassignment_set.all %}

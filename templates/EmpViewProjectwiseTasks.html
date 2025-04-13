@@ -58,8 +58,8 @@
                                     <div class="card-body p-0">
                                         <p>{{ assign.task.t_desc }}</p>
 
-                                        <h4 class="fs-6 fw-normal mt-4"><b>Project:</b> {{ assign.task.p_id.p_name|upper }}</h4>
-                                        <h4 class="fs-6 fw-normal mt-4"><b>Board:</b> {{ assign.task.b_id.b_name|upper }}</h4>
+                                        <h4 class="fs-6 fw-normal mt-4"><b>Batch:</b> {{ assign.task.p_id.p_name|upper }}</h4>
+                                        <h4 class="fs-6 fw-normal mt-4"><b>Class:</b> {{ assign.task.b_id.b_name|upper }}</h4>
 
                                         <h4 class="fs-6 fw-normal mt-4"><b>Priority:</b>
                                             {% if assign.task.t_priority == "High Priority" %}

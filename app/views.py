@@ -471,7 +471,7 @@ def org_view_attendance(request):
 @org_login_required
 def org_emp_leave_views(request):
     o_id = request.session['o_id']
-    LeaveObj = Leaves.objects.filter(o_id_id=o_id,l_status="Assigned").all()
+    LeaveObj = Leaves.objects.filter(o_id_id=o_id,l_status="Pending").all()
     return render(request, 'OrgEmpLeavesTbl.html' , {"leaves": LeaveObj})
 
 # approval of leave
@@ -1540,17 +1540,40 @@ def user_depth_view_app_web(request):
 
 #screenshot logs
 @user_login_required
+@user_login_required
 def user_ss_monitoring(request):
     if request.method == 'POST':
-        o_id = request.session['u_oid']
-        e_id = request.session['u_id']
-        ss_date = request.POST['date_log']
-        ss_date_f1 = datetime.datetime.strptime(ss_date, '%Y-%m-%d')
-        ss_date_f2 = datetime.datetime.strftime(ss_date_f1, '%Y-%#m-%#d')
-        ss_moni_details = ScreenShotsMonitoring.objects.filter(o_id_id=o_id, e_id_id=e_id, ssm_log_ts__startswith=ss_date_f2).values()
-        return render(request, 'EmpViewSSMoniLogs.html', {"msg": ss_moni_details})
-    else:
-        return render(request, 'EmpSelectSSMoniEmp.html')
+        try:
+            o_id = request.session['u_oid']
+            e_id = request.session['u_id']
+            ss_date = request.POST.get('date_log')
+
+            if not ss_date:
+                messages.error(request, "Date not selected.")
+                return render(request, 'EmpSelectSSMoniEmp.html')
+
+            ss_date_f1 = datetime.datetime.strptime(ss_date, '%Y-%m-%d')
+            ss_date_f2 = ss_date_f1.strftime('%Y-%m-%d')  # Safe format
+
+            ss_moni_details = list(ScreenShotsMonitoring.objects.filter(
+                o_id_id=o_id,
+                e_id_id=e_id,
+                ssm_log_ts__date=ss_date_f2
+            ).values())
+
+            for item in ss_moni_details:
+                img = item['ssm_img']
+                if not img.startswith('data:image'):
+                    item['ssm_img'] = f"data:image/png;base64,{img}"
+
+            return render(request, 'EmpViewSSMoniLogs.html', {"msg": ss_moni_details})
+
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return render(request, 'EmpSelectSSMoniEmp.html')
+
+    return render(request, 'EmpSelectSSMoniEmp.html')
+
 
 #power monitoring logs
 @user_login_required
@@ -1591,6 +1614,47 @@ def user_work_productivity_check(request):
         return render(request, 'EmpViewWorkProductivity.html', {"msg": sum_of_emp_prod, "msg1": prd_total, "msg2": e_id, "msg3": m_date, "msg4": unprd_total, "msg5": undef_total, "msg6": total_time_spent})
     else:
         return render(request, 'EmpSelectWp.html')
+
+def get_work_productivity_details(o_id, e_id, m_date):
+        md_date_f1 = datetime.datetime.strptime(m_date, '%Y-%m-%d')
+        md_date_f2 = datetime.datetime.strftime(md_date_f1, '%Y-%#m-%#d')
+        sum_of_emp_prod = []
+
+        wp_ds_pr_details_unclean = list(WorkProductivityDataset.objects.filter(
+            o_id_id=o_id, w_type='1').values_list('w_pds'))
+        wp_ds_un_pr_details_unclean = list(WorkProductivityDataset.objects.filter(
+            o_id_id=o_id, w_type='0').values_list('w_pds'))
+        emp_work_data_details_unclean = list(MonitoringDetails.objects.filter(
+            o_id_id=o_id, e_id_id=e_id, md_date=md_date_f2).values_list('md_title', 'md_total_time_seconds').distinct())
+
+        wp_ds_pr_details = [
+            item for x in wp_ds_pr_details_unclean for item in x]
+        wp_ds_un_pr_details = [
+            item for x in wp_ds_un_pr_details_unclean for item in x]
+        emp_work_data_details = [
+            item for x in emp_work_data_details_unclean for item in x]
+
+
+        combined_wp_ds_pr_un_pr = wp_ds_pr_details + wp_ds_un_pr_details
+
+        for emp, ti in emp_work_data_details_unclean:
+            for pr in wp_ds_pr_details:
+                ratio = fuzz.partial_ratio(emp, pr)
+                if ratio >= 60:
+                    sum_of_emp_prod.append(tuple((emp, 1, ti)))
+
+        for emp, ti in emp_work_data_details_unclean:
+            for un_pr in wp_ds_un_pr_details:
+                ratio = fuzz.partial_ratio(emp, un_pr)
+                if ratio >= 60:
+                    sum_of_emp_prod.append(tuple((emp, 2, ti)))
+
+        for emp, ti in emp_work_data_details_unclean:
+            for combined_pr_un_pr in combined_wp_ds_pr_un_pr:
+                ratio = fuzz.partial_ratio(emp, combined_pr_un_pr)
+                if ratio >= 5:
+                    sum_of_emp_prod.append(tuple((emp, 3, ti)))
+        return sum_of_emp_prod
 
 ########## Project overview // BAtch overview ###################
 #project
@@ -1769,7 +1833,7 @@ def user_apply_emp_leaves(request):
         l_desc = request.POST['l_desc']
         l_start_date = request.POST['l_start_date']
         l_no_of_leaves = request.POST['l_no_of_leaves']
-        l_status = "Assigned"
+        l_status = "Pending"
         LeaveObj = Leaves.objects.create( l_reason=l_reason, l_desc=l_desc, l_start_date=l_start_date, l_no_of_leaves=l_no_of_leaves, l_status=l_status, o_id_id=o_id, e_id_id=e_id)
         if LeaveObj:
             messages.success(request, "Leave Request was created successfully!")
@@ -1957,46 +2021,7 @@ def get_emps_by_project(request, pid):
 
 
 
-def get_work_productivity_details(o_id, e_id, m_date):
-        md_date_f1 = datetime.datetime.strptime(m_date, '%Y-%m-%d')
-        md_date_f2 = datetime.datetime.strftime(md_date_f1, '%Y-%#m-%#d')
-        sum_of_emp_prod = []
 
-        wp_ds_pr_details_unclean = list(WorkProductivityDataset.objects.filter(
-            o_id_id=o_id, w_type='1').values_list('w_pds'))
-        wp_ds_un_pr_details_unclean = list(WorkProductivityDataset.objects.filter(
-            o_id_id=o_id, w_type='0').values_list('w_pds'))
-        emp_work_data_details_unclean = list(MonitoringDetails.objects.filter(
-            o_id_id=o_id, e_id_id=e_id, md_date=md_date_f2).values_list('md_title', 'md_total_time_seconds').distinct())
-
-        wp_ds_pr_details = [
-            item for x in wp_ds_pr_details_unclean for item in x]
-        wp_ds_un_pr_details = [
-            item for x in wp_ds_un_pr_details_unclean for item in x]
-        emp_work_data_details = [
-            item for x in emp_work_data_details_unclean for item in x]
-
-
-        combined_wp_ds_pr_un_pr = wp_ds_pr_details + wp_ds_un_pr_details
-
-        for emp, ti in emp_work_data_details_unclean:
-            for pr in wp_ds_pr_details:
-                ratio = fuzz.partial_ratio(emp, pr)
-                if ratio >= 60:
-                    sum_of_emp_prod.append(tuple((emp, 1, ti)))
-
-        for emp, ti in emp_work_data_details_unclean:
-            for un_pr in wp_ds_un_pr_details:
-                ratio = fuzz.partial_ratio(emp, un_pr)
-                if ratio >= 60:
-                    sum_of_emp_prod.append(tuple((emp, 2, ti)))
-
-        for emp, ti in emp_work_data_details_unclean:
-            for combined_pr_un_pr in combined_wp_ds_pr_un_pr:
-                ratio = fuzz.partial_ratio(emp, combined_pr_un_pr)
-                if ratio >= 5:
-                    sum_of_emp_prod.append(tuple((emp, 3, ti)))
-        return sum_of_emp_prod
 
 def get_prod_details(request, eidanddate):
     e_id = eidanddate.split('and')[0]
