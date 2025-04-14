@@ -1,8 +1,8 @@
 {% extends 'OrgDashboard.html' %}
 {% block body %}
-<div class="row align-items-center d-flex  justify-content-center">
+<div class="row align-items-center d-flex justify-content-center">
     <div class="col-12 mb-4">
-        <div class="card border-light shadow-sm components-section align-items-center d-flex  justify-content-center">
+        <div class="card border-light shadow-sm components-section align-items-center d-flex justify-content-center">
             <div class="card-body align-items-center d-flex justify-content-center">
                 <div class="row mb-4">
                     {% if msg is not none and msg %}
@@ -21,14 +21,14 @@
                                 {% for result in msg %}
                                 <div class="col-12">
                                     <div class="card card-body shadow-sm mb-4">
-                                        <div class="form-group">
-                                            <img src="{{result.ssm_img}}" alt="img_data"
-                                                width="1024px" height="520px" id="imgslot" /><br>
+                                        <div class="form-group text-center">
+                                            <img src="{{ result.ssm_img }}" alt="img_data"
+                                                style="max-width: 100%; height: auto; border: 1px solid #ccc;" />
                                         </div>
                                         <div class="form-group">
                                             <h5 class="h5">
                                                 <span class="fas fa-clock"></span> LOG DATE-TIME:
-                                                {{result.ssm_log_ts}}
+                                                {{ result.ssm_log_ts }}
                                             </h5>
                                         </div>
                                     </div>
@@ -55,4 +55,5 @@
             </div>
         </div>
     </div>
-    {% endblock %}
+</div>
+{% endblock %}

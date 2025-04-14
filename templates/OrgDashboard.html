@@ -397,8 +397,10 @@
                     console.log("Responsee");
                     console.log(data['logged_in_count']);
                     let logged_in_count = data['logged_in_count'];
+                    let logged_out_count = data['logged_out_count'];
+                    let total_active=logged_in_count-logged_out_count;
                     let total_emps = data['total_emps'];
-                    document.getElementById('activeEmps').innerHTML = 'Active: ' + logged_in_count + '/' + total_emps;
+                    document.getElementById('activeEmps').innerHTML = 'Active: ' + total_active + '/' + total_emps;
                 },
                 errors: function (e) {
                     alert(e);

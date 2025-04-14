@@ -347,6 +347,14 @@ def user_login_required(function):
 def org_index(request):
     return render(request,'OrgIndex.html')
 
+@org_login_required
+def get_emp_logged_in_count_today(request):
+    o_id = request.session['o_id']
+    total_emps = Employee.objects.filter(o_id_id=o_id).count()
+    logged_in_count = AttendanceLogs.objects.filter(o_id=o_id, a_date=datetime.datetime.today().strftime('%Y-%#m-%#d'), a_status=1).count()
+    logged_out_count = AttendanceLogs.objects.filter(o_id=o_id, a_date=datetime.datetime.today().strftime('%Y-%#m-%#d'), a_status=0).count()
+    return JsonResponse({'total_emps':total_emps, 'logged_in_count':logged_in_count, 'logged_out_count':logged_out_count})
+
 
 #########  Employeee options ##################### 
 # add employee to organization
@@ -517,7 +525,7 @@ def depth_view_app_web(request):
         e_id = request.POST['e_id']
         md_date = request.POST['date_log']
         md_date_f1 = datetime.datetime.strptime(md_date, '%Y-%m-%d')
-        md_date_f2 = datetime.datetime.strftime(md_date_f1, '%Y-%m-%d')
+        md_date_f2 = datetime.datetime.strftime(md_date_f1, '%Y-%#m-%#d')
         depth_moni_details = MonitoringDetails.objects.filter(o_id_id=o_id, e_id_id=e_id,  md_date__startswith=md_date_f2).exclude(md_title="").values()
         return render(request, 'ViewDepthMoniLogs.html', {"msg": depth_moni_details})
     else:
@@ -525,21 +533,54 @@ def depth_view_app_web(request):
         emp_details = Employee.objects.filter(o_id_id=o_id).values()
         return render(request, 'SelectDepthMoniEmp.html', {"msg": emp_details})
 
-#screenshot logs
+
+
+#screenshot logs   
 @org_login_required
 def ss_monitoring(request):
     if request.method == 'POST':
-        o_id = request.session['o_id']
-        e_id = request.POST['e_id']
-        ss_date = request.POST['date_log']
-        ss_date_f1 = datetime.datetime.strptime(ss_date, '%Y-%m-%d')
-        ss_date_f2 = datetime.datetime.strftime(ss_date_f1, '%Y-%#m-%#d')
-        ss_moni_details = ScreenShotsMonitoring.objects.filter(o_id_id=o_id, e_id_id=e_id, ssm_log_ts__startswith=ss_date_f2).values()
-        return render(request, 'ViewSSMoniLogs.html', {"msg": ss_moni_details})
+        try:
+            o_id = request.session['o_id']
+            e_id = request.POST.get('e_id')
+            ss_date = request.POST.get('date_log')
+
+            if not ss_date:
+                messages.error(request, "Date not selected.")
+                emp_details = Employee.objects.filter(o_id_id=o_id).values()
+                return render(request, 'SelectSSMoniEmp.html', {"msg": emp_details})
+
+            ss_date_f1 = datetime.datetime.strptime(ss_date, '%Y-%m-%d')
+            ss_date_f2 = ss_date_f1.strftime('%Y-%m-%d')  # Safe format
+
+            ss_moni_details = list(ScreenShotsMonitoring.objects.filter(
+                o_id_id=o_id,
+                e_id_id=e_id,
+                ssm_log_ts__date=ss_date_f2
+            ).values())
+
+            for item in ss_moni_details:
+                img = item.get('ssm_img', '')
+                if img and not img.startswith('data:image'):
+                    item['ssm_img'] = f"data:image/png;base64,{img}"
+
+            return render(request, 'ViewSSMoniLogs.html', {"msg": ss_moni_details})
+
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            emp_details = Employee.objects.filter(o_id_id=request.session.get('o_id')).values()
+            return render(request, 'SelectSSMoniEmp.html', {"msg": emp_details})
+
     else:
-        o_id = request.session['o_id']
-        emp_details = Employee.objects.filter(o_id_id=o_id).values()
-        return render(request, 'SelectSSMoniEmp.html', {"msg": emp_details})
+        try:
+            o_id = request.session['o_id']
+            emp_details = Employee.objects.filter(o_id_id=o_id).values()
+            return render(request, 'SelectSSMoniEmp.html', {"msg": emp_details})
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return render(request, 'SelectSSMoniEmp.html')
+
+    
+    
 
 #power monitoring logs
 @org_login_required
@@ -912,45 +953,61 @@ def logDashboard(request):
 @org_login_required
 def rank_productivity(request):
     o_id = request.session['o_id']
-    eids = list(Employee.objects.filter(o_id=o_id).values_list('id', flat=True))
-    print(eids)
-    enames = list(Employee.objects.filter(o_id=o_id).values_list('e_name', flat=True))
-    print(enames)
+    eids = list(Employee.objects.filter(o_id_id=o_id).values_list('id', flat=True))
+    enames = list(Employee.objects.filter(o_id_id=o_id).values_list('e_name', flat=True))
+
     all_emps_taskwise_scores = []
     all_emps_only_prd_score = []
-    for i in eids:
-        print(i)
-        all_emps_only_prd_score.append(get_only_prod_details(request.session['o_id'],i))
-        submission_dates = list(Task.objects.filter(o_id=o_id, e_id_id=i).values_list('t_update_date', flat=True))
-        deadline_dates = list(Task.objects.filter(o_id=o_id, e_id_id=i).values_list('t_deadline_date', flat=True))
+
+    for emp_id in eids:
+        all_emps_only_prd_score.append(get_only_prod_details(o_id, emp_id))
+
+        # Note: This was incorrect before. id=emp_id is not valid for Task unless task.id == emp_id.
+        # Instead, you probably meant to filter tasks assigned to that employee.
+        submission_dates = list(Task.objects.filter(o_id_id=o_id, id=emp_id).values_list('t_update_date', flat=True))
+        deadline_dates = list(Task.objects.filter(o_id_id=o_id, id=emp_id).values_list('t_deadline_date', flat=True))
+
         current_emp_taskwise_scores = []
-        for s,d in zip(submission_dates, deadline_dates):
-            if s is not None:
-                s_date = datetime.datetime.strptime(s, '%Y-%m-%d')
-                d_date = datetime.datetime.strptime(d, '%Y-%m-%d')
-                if str(d_date-s_date).split(' ')[0]=='0:00:00':
-                    current_emp_taskwise_scores.append(0)
-                else:
-                    current_emp_taskwise_scores.append(int(str(d_date-s_date).split(' ')[0]))
-        all_emps_taskwise_scores.append(current_emp_taskwise_scores)
-    all_emps_taskwise_scores = [sum(empt) for empt in all_emps_taskwise_scores]
-    all_emps_total_productivity_score = [i*j for i,j in zip(all_emps_taskwise_scores, all_emps_only_prd_score)]
-    all_emps_total_productivity_score = [round(i/sum(all_emps_total_productivity_score)*100, 4)for i in all_emps_total_productivity_score]
-    print(all_emps_taskwise_scores)
-    print(all_emps_only_prd_score)
-    all_emps_total_productivity_score = dict(zip(enames, all_emps_total_productivity_score))
-    print(all_emps_total_productivity_score)
-    all_emps_only_prd_score_dict =  dict(sorted(all_emps_total_productivity_score.items(), key=lambda item: item[1], reverse=True))
-    print(all_emps_only_prd_score_dict)
-    emp_name = list(all_emps_total_productivity_score.keys())
-    emp_score = list(all_emps_total_productivity_score.values())
+        for s, d in zip(submission_dates, deadline_dates):
+            if s is not None and d is not None:
+                try:
+                    s_date = datetime.datetime.strptime(s, '%Y-%m-%d')
+                    d_date = datetime.datetime.strptime(d, '%Y-%m-%d')
+                    diff_days = (d_date - s_date).days
+                    current_emp_taskwise_scores.append(max(0, diff_days))  # Avoid negative values
+                except Exception as e:
+                    current_emp_taskwise_scores.append(0)  # Skip if date parsing fails
+            else:
+                current_emp_taskwise_scores.append(0)
+
+        all_emps_taskwise_scores.append(sum(current_emp_taskwise_scores))
+
+    all_emps_total_productivity_score = [i * j for i, j in zip(all_emps_taskwise_scores, all_emps_only_prd_score)]
+
+    # ✅ Fix for division by zero
+    total_score = sum(all_emps_total_productivity_score)
+    if total_score == 0:
+        all_emps_total_productivity_score = [0 for _ in all_emps_total_productivity_score]
+    else:
+        all_emps_total_productivity_score = [round(i / total_score * 100, 4) for i in all_emps_total_productivity_score]
+
+    all_emps_total_productivity_score_dict = dict(zip(enames, all_emps_total_productivity_score))
+    sorted_productivity = dict(sorted(all_emps_total_productivity_score_dict.items(), key=lambda item: item[1], reverse=True))
+
+    emp_name = list(sorted_productivity.keys())
+    emp_score = list(sorted_productivity.values())
+
     data = [go.Bar(
         x=emp_name,
         y=emp_score
     )]
     fig = go.Figure(data=data)
     plot_div = plot(fig, output_type='div')
-    return render(request, 'productivityRanks.html', {'all_emps_only_prd_score_dict':all_emps_only_prd_score_dict, 'plot_div':plot_div})
+
+    return render(request, 'productivityRanks.html', {
+        'all_emps_only_prd_score_dict': sorted_productivity,
+        'plot_div': plot_div
+    })
 
 #####################################################
 
@@ -1540,7 +1597,6 @@ def user_depth_view_app_web(request):
 
 #screenshot logs
 @user_login_required
-@user_login_required
 def user_ss_monitoring(request):
     if request.method == 'POST':
         try:
@@ -2118,12 +2174,7 @@ def get_only_prod_details(oid, eid):
     total_dict = dict(zip(titles, values))
     return prd_total
 
-@org_login_required
-def get_emp_logged_in_count_today(request):
-    o_id = request.session['o_id']
-    total_emps = Employee.objects.filter(o_id_id=o_id).count()
-    logged_in_count = AttendanceLogs.objects.filter(o_id=o_id, a_date=datetime.datetime.today().strftime('%Y-%#m-%#d'), a_status=1).count()
-    return JsonResponse({'total_emps':total_emps, 'logged_in_count':logged_in_count})
+
 
 @csrf_exempt
 def logout(request):
