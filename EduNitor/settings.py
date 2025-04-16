@@ -88,8 +88,8 @@ WSGI_APPLICATION = 'EduNitor.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Final_year',
-        'USER': 'root',
+        'NAME': 'database_name',
+        'USER': 'username',
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
