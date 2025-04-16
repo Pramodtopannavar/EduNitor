@@ -90,8 +90,8 @@ def org_register(request):
         if password1 == password2:
             otp = generateOTP()
             request.session['tempOTP'] = otp
-            subject = 'MyRemoteDesk - OTP Verification'
-            message = f'Hi {o_name}, thank you for registering in MyRemoteDesk . Your One Time Password (OTP) for verfication is {otp}'
+            subject = 'EduNitor - OTP Verification'
+            message = f'Hi {o_name}, thank you for registering in EduNitor . Your One Time Password (OTP) for verfication is {otp}'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [o_email, ]
             send_mail(subject, message, email_from, recipient_list)
@@ -183,10 +183,10 @@ def contact(request):
         cname = request.POST['cname']
         cemail = request.POST['cemail']
         cquery = request.POST['cquery']
-        subject = 'MyRemoteDesk - New Enquiry'
-        message = f'Name : {cname}, Email : {cemail}, Query : {cquery}'
+        subject = 'EduNitor - New Enquiry'
+        message = f'Name : {cname},\nEmail : {cemail},\nQuery : {cquery}'
         email_from = settings.EMAIL_HOST_USER
-        recipient_list = ["pramodtopannavar17@gmail.com"]
+        recipient_list = ["educnitor@gmail.com"]
         send_mail(subject, message, email_from, recipient_list)
         send_mail(subject, "YOUR QUERY WILL BE PROCESSED! WITHIN 24 HOURS", email_from, [cemail])
         messages.success(request, "Your Query has been recorded.")
@@ -211,7 +211,7 @@ def org_forgot_password(request):
         if org_details:
             otp = generateOTP()
             request.session['tempfpOrgOTP'] = otp
-            subject = 'MyRemoteDesk - OTP Verification for Forgot Password'
+            subject = 'EduNitor - OTP Verification for Forgot Password'
             message = f'Hi {o_email}, Your One Time Password (OTP) for forgot password is is {otp}'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [o_email, ]
@@ -243,7 +243,7 @@ def org_forgot_password_change_password(request):
         if(pwd1 == pwd2):
             org_details = Organization.objects.filter(o_email=tempOrgFpEmail).update(o_password=pwd1)
             if org_details:
-                subject = 'MyRemoteDesk - Password was Changed'
+                subject = 'EduNitor - Password was Changed'
                 message = f'Hi, Your Password was changed!'
                 email_from = settings.EMAIL_HOST_USER
                 recipient_list = [tempOrgFpEmail]
@@ -266,7 +266,7 @@ def user_forgot_password(request):
         if emp_details:
             otp = generateOTP()
             request.session['tempfpEmpOTP'] = otp
-            subject = 'MyRemoteDesk - OTP Verification for Forgot Password'
+            subject = 'EduNitor - OTP Verification for Forgot Password'
             message = f'Hi {e_email}, Your One Time Password (OTP) for forgot password is is {otp}'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [e_email, ]
@@ -298,7 +298,7 @@ def user_forgot_password_change_password(request):
         if(pwd1 == pwd2):
             emp_details = Employee.objects.filter(e_email=tempEmpFpEmail).update(e_password=pwd1)
             if emp_details:
-                subject = 'MyRemoteDesk - Password was Changed'
+                subject = 'EduNitor - Password was Changed'
                 message = f'Hi, Your Password was changed!'
                 email_from = settings.EMAIL_HOST_USER
                 recipient_list = [tempEmpFpEmail]
@@ -370,9 +370,9 @@ def add_emp(request):
         e_address = request.POST['e_address']
         empObj = Employee.objects.create(e_name=e_name, e_email=e_email, e_password=e_password,e_contact=e_contact, e_gender=e_gender, e_address=e_address, o_id_id=o_id)
         if empObj:
-            subject = 'MyRemoteDesk - Login Info'
+            subject = 'EduNitor - Login Info'
             org_name = request.session['o_name']
-            message = f'\nName : {e_name}, \n Email : {e_email}, \n Password : {e_password} \n Teacher : {org_name},\n FROM - MyRemoteDesk \n pramod,siddappa,yugant,prathamesh'
+            message = f'\nName : {e_name}, \n Email : {e_email}, \n Password : {e_password} \n Teacher : {org_name},\n FROM - EduNitor \n pramod,siddappa,yugant,prathamesh'
             email_from = settings.EMAIL_HOST_USER
             send_mail(subject, message, email_from, [e_email])
             messages.success(request, "Employee was added successfully!")
@@ -777,8 +777,8 @@ def assign_proj_emp(request):
                 project_details = Project.objects.filter(o_id_id=o_id,id=p_id).values()
                 s_p_name = project_details[0]["p_name"]
                 if user_details and project_details:
-                    subject = 'MyRemoteDesk - Batch was Assigned to you'
-                    message = f'Hi, {s_name} You are asssigned to Batch {s_p_name} Check on MyRemoteDesk !'
+                    subject = 'EduNitor - Batch was Assigned to you'
+                    message = f'Hi, {s_name} You are asssigned to Batch {s_p_name} Check on EduNitor !'
                     email_from = settings.EMAIL_HOST_USER
                     recipient_list = [s_email]
                     send_mail(subject, message, email_from, recipient_list)
@@ -1094,7 +1094,7 @@ def create_task(request):
                 TaskAssignment.objects.create(task=taskObj, employee=emp)
 
             # Send email notifications
-            subject = 'MyRemoteDesk - New Task Created for You'
+            subject = 'EduNitor - New Task Created for You'
             email_from = settings.EMAIL_HOST_USER
 
             for emp in empDetails:
@@ -1107,10 +1107,10 @@ def create_task(request):
                 Priority: {t_priority}
                 Deadline: {t_deadline_date}
 
-                Please log in to MyRemoteDesk to view and manage your task.
+                Please log in to EduNitor to view and manage your task.
 
                 Regards,
-                MyRemoteDesk Team
+                EduNitor Team
 
                 Developed by: Pramod, Siddappa, Yugant, Prathamesh
                 """
@@ -1163,7 +1163,7 @@ def create_task(request):
 #             taskObj.e_id.set(empDetails)
 
 #             # Send emails to employees
-#             subject = 'MyRemoteDesk - New Task Created for You'
+#             subject = 'EduNitor - New Task Created for You'
 #             email_from = settings.EMAIL_HOST_USER
             
 #             for emp in empDetails:
@@ -1176,10 +1176,10 @@ def create_task(request):
 #                 Priority: {t_priority}
 #                 Deadline: {t_deadline_date}
 
-#                 Please log in to MyRemoteDesk to view and manage your task.
+#                 Please log in to EduNitor to view and manage your task.
 
 #                 Regards,
-#                 MyRemoteDesk Team
+#                 EduNitor Team
 
 #                 Developed by: Pramod, Siddappa, Yugant, Prathamesh
 #                 """
@@ -1223,11 +1223,11 @@ def create_task(request):
 #             # Fetch all employees under the selected batch
 #             employees = Employee.objects.filter(b_id=b_id, o_id_id=o_id).values()
             
-#             subject = 'MyRemoteDesk - New Task Created'
+#             subject = 'EduNitor - New Task Created'
 #             email_from = settings.EMAIL_HOST_USER
 
             # for emp in employees:
-            #     message = f'Hi {emp["e_name"]}, Your organization has created a new task: {t_name}, description: {t_desc}, priority: {t_priority}, and deadline for the task is: {t_deadline_date}. Login to your account for more information. From: MyRemoteDesk.'
+            #     message = f'Hi {emp["e_name"]}, Your organization has created a new task: {t_name}, description: {t_desc}, priority: {t_priority}, and deadline for the task is: {t_deadline_date}. Login to your account for more information. From: EduNitor.'
             #     send_mail(subject, message, email_from, [emp["e_email"]])
 
 #             messages.success(request, "Task was created successfully!")
@@ -1279,7 +1279,7 @@ def create_meet(request):
             user_details = Employee.objects.filter(id__in=pel_details).values()
             if user_details:
                 for ud in user_details:
-                    subject = 'MyRemoteDesk - New Meeting'
+                    subject = 'EduNitor - New Meeting'
                     s_name = ud['e_name']
                     s_email = ud['e_email']
                     message = f"""Hi, {s_name} 
@@ -1287,9 +1287,9 @@ def create_meet(request):
                     Meeting Name :{m_name}, 
                     Meeting Description: {m_desc},
                     Date Time: {start_date} {start_time}
-                    Check on MyRemoteDesk
+                    Check on EduNitor
                     Regards,
-                    MyRemoteDesk Team
+                    EduNitor Team
 
                     Developed by: Pramod, Siddappa, Yugant, Prathamesh"""
                     email_from = settings.EMAIL_HOST_USER
@@ -1338,10 +1338,10 @@ def edit_meet(request, mid):
                 user_details = Employee.objects.filter(id__in=pel_details).values()
                 if user_details:
                     for ud in user_details:
-                        subject = 'MyRemoteDesk - New Meeting'
+                        subject = 'EduNitor - New Meeting'
                         s_name = ud['e_name']
                         s_email = ud['e_email']
-                        message = f'Hi, {s_name} New Meeting for created for you! Details are Meeting Name :{meet_name}, Meeting Description: {meet_desc}, Date Time: {start_date} {start_time} Check on MyRemoteDesk !'
+                        message = f'Hi, {s_name} New Meeting for created for you! Details are Meeting Name :{meet_name}, Meeting Description: {meet_desc}, Date Time: {start_date} {start_time} Check on EduNitor !'
                         email_from = settings.EMAIL_HOST_USER
                         recipient_list = [s_email]
                         send_mail(subject, message, email_from, recipient_list)
@@ -1396,10 +1396,10 @@ def create_notice(request):
             user_details = Employee.objects.filter(o_id_id=o_id).values()
             if user_details:
                 for ud in user_details:
-                    subject = 'MyRemoteDesk - New Notice Published'
+                    subject = 'EduNitor - New Notice Published'
                     s_name = ud['e_name']
                     s_email = ud['e_email']
-                    message = f'Hi, {s_name} Your Organization has published a new notice, Notice Title: {on_title} Check on MyRemoteDesk !'
+                    message = f'Hi, {s_name} Your Organization has published a new notice, Notice Title: {on_title} Check on EduNitor !'
                     email_from = settings.EMAIL_HOST_USER
                     recipient_list = [s_email]
                     send_mail(subject, message, email_from, recipient_list)
@@ -1466,12 +1466,12 @@ def report_org(request):
         cemail = request.session['o_email']
         ptype = request.POST['prob_type']
         cquery = request.POST['rquery']
-        subject = 'MyRemoteDesk - New Enquiry'
+        subject = 'EduNitor - New Enquiry'
         message = f'Name : {cname}, Email : {cemail}, Problem : {ptype}, Query : {cquery}'
         email_from = settings.EMAIL_HOST_USER
         recipient_list = ["pramodtopannavar843@gmail.com"]
         send_mail(subject, message, email_from, recipient_list)
-        send_mail(subject, "Your Problem has been recorded. From: MyRemoteDesk", email_from, [cemail])
+        send_mail(subject, "Your Problem has been recorded. From: EduNitor", email_from, [cemail])
         msg = "Your Problem has been recorded."
         messages.success(request, "Your Problem has been recorded.")
         return HttpResponseRedirect('/org_report_problems')    
@@ -1487,16 +1487,16 @@ def org_change_password(request):
         o_email = request.session['o_email']
         org_details = Organization.objects.filter(o_email=o_email, o_password=oldPwd, pk=o_id).update(o_password=newPwd)
         if org_details:
-            subject = 'MyRemoteDesk - Password Changed'
-            message = f'Hi, your password was changed successfully! From MyRemoteDesk'
+            subject = 'EduNitor - Password Changed'
+            message = f'Hi, your password was changed successfully! From EduNitor'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [o_email, ]
             send_mail(subject, message, email_from, recipient_list)
             messages.success(request, "Password Change Successfully")
             return HttpResponseRedirect('/org_change_password')
         else:
-            subject = 'MyRemoteDesk - Notifications'
-            message = f'Hi, there was attempt to change your password! From MyRemoteDesk'
+            subject = 'EduNitor - Notifications'
+            message = f'Hi, there was attempt to change your password! From EduNitor'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [o_email, ]
             send_mail(subject, message, email_from, recipient_list)
@@ -1524,19 +1524,25 @@ def user_profile(request):
     if request.method == 'GET':
         o_id = request.session['u_oid']
         e_id = request.session['u_id']  # Logged-in Employee ID
-        
+
         # Fetch Employee Details
         emp_details = Employee.objects.filter(o_id_id=o_id, id=e_id).first()
 
-        # Get all tasks assigned to the employee (Many-to-Many filter)
-        assigned_tasks = Task.objects.filter(o_id_id=o_id, e_id__id=e_id)
-        count_no_of_total_tasks = assigned_tasks.count()
-        count_no_of_completed_tasks = assigned_tasks.filter(t_status="completed").count()
+        # Fetch all task assignments for this employee
+        task_assignments = TaskAssignment.objects.filter(employee_id=e_id, task__o_id_id=o_id)
+
+        # Task counts
+        count_no_of_total_tasks = task_assignments.count()
+        count_no_of_completed_tasks = task_assignments.filter(status="completed").count()
         count_no_of_pending_tasks = count_no_of_total_tasks - count_no_of_completed_tasks
 
-        # Get projects where the employee is linked
-        pel_details = Project_Employee_Linker.objects.filter(o_id_id=o_id, e_id_id=e_id).values_list('p_id_id', flat=True)
-        project_details = Project.objects.filter(id__in=pel_details).values()
+        # Get all project IDs where employee is assigned
+        project_ids = Project_Employee_Linker.objects.filter(
+            o_id_id=o_id, e_id_id=e_id
+        ).values_list('p_id_id', flat=True)
+
+        # Get full project details
+        project_details = Project.objects.filter(id__in=project_ids).values()
 
         return render(request, 'EmpProfile.html', {
             "msg": emp_details,
@@ -1863,20 +1869,49 @@ def emp_update_tasks(request, tid):
 @user_login_required
 def user_view_attendance(request):
     e_id = request.session['u_id']
-    if request.method=='POST':
+    
+    if request.method == 'POST':
         m_date = request.POST['date_log']
-        m_date = datetime.datetime.strptime(m_date, '%Y-%m-%d')
-        m_date = datetime.datetime.strftime(m_date, '%Y-%#m-%#d')
-        attendance_logs = list(AttendanceLogs.objects.filter(e_id=e_id,a_date=m_date).values_list('a_date','a_ip_address','a_time_zone','a_lat','a_long'))[0]
-        logged_in_time = list(AttendanceLogs.objects.filter(e_id=e_id,a_date=m_date, a_status=1).values_list('a_time'))[0][0]
-        logged_out_time = list(AttendanceLogs.objects.filter(e_id=e_id,a_date=m_date, a_status=0).values_list('a_time'))[0][0]
-        logged_in_time = datetime.datetime.fromtimestamp(int(logged_in_time)).strftime('%H:%M:%S')
-        logged_out_time = datetime.datetime.fromtimestamp(int(logged_out_time)).strftime('%H:%M:%S')
-        total_time_logged = datetime.datetime.strptime(logged_out_time,"%H:%M:%S") - datetime.datetime.strptime(logged_in_time,"%H:%M:%S")
-        context = {
-             'attendance_logs':list(attendance_logs), 'logged_in_time':logged_in_time, 'logged_out_time':logged_out_time, 'total_time_logged':total_time_logged
-        }
+        try:
+            m_date_obj = datetime.datetime.strptime(m_date, '%Y-%m-%d')
+            m_date_str = m_date_obj.strftime('%Y-%#m-%#d')
+
+            attendance_qs = AttendanceLogs.objects.filter(e_id=e_id, a_date=m_date_str)
+
+            if attendance_qs.exists():
+                attendance_logs = list(attendance_qs.values_list('a_date','a_ip_address','a_time_zone','a_lat','a_long'))[0]
+
+                logged_in_qs = AttendanceLogs.objects.filter(e_id=e_id, a_date=m_date_str, a_status='1')
+                logged_out_qs = AttendanceLogs.objects.filter(e_id=e_id, a_date=m_date_str, a_status='0')
+
+                if logged_in_qs.exists() and logged_out_qs.exists():
+                    logged_in_time = logged_in_qs.values_list('a_time', flat=True)[0]
+                    logged_out_time = logged_out_qs.values_list('a_time', flat=True)[0]
+
+                    logged_in_time_fmt = datetime.datetime.fromtimestamp(int(logged_in_time)).strftime('%H:%M:%S')
+                    logged_out_time_fmt = datetime.datetime.fromtimestamp(int(logged_out_time)).strftime('%H:%M:%S')
+
+                    total_time_logged = (
+                        datetime.datetime.strptime(logged_out_time_fmt, "%H:%M:%S") - 
+                        datetime.datetime.strptime(logged_in_time_fmt, "%H:%M:%S")
+                    )
+
+                    context = {
+                        'attendance_logs': list(attendance_logs),
+                        'logged_in_time': logged_in_time_fmt,
+                        'logged_out_time': logged_out_time_fmt,
+                        'total_time_logged': total_time_logged
+                    }
+                else:
+                    context = {'error': 'Login or logout time not found for this date.'}
+            else:
+                context = {'error': 'No attendance data found for this date.'}
+
+        except Exception as e:
+            context = {'error': f'Error processing request: {str(e)}'}
+
         return render(request, 'UserAttendance.html', context)
+
     return render(request, 'UserAttendance.html')
 
 #apply for leaves
@@ -1919,12 +1954,12 @@ def report_emp(request):
         cemail = request.session['o_email']
         ptype = request.POST['prob_type']
         cquery = request.POST['rquery']
-        subject = 'MyRemoteDesk - New Enquiry'
+        subject = 'EduNitor - New Enquiry'
         message = f'Name : {cname}, Email : {cemail}, Problem : {ptype}, Query : {cquery}'
         email_from = settings.EMAIL_HOST_USER
         recipient_list = ["pramodtopannavar843@gmail.com"]
         send_mail(subject, message, email_from, recipient_list)
-        send_mail(subject, "Your Problem has been recorded. From: MyRemoteDesk", email_from, [cemail])
+        send_mail(subject, "Your Problem has been recorded. From: EduNitor", email_from, [cemail])
         msg = "Your Problem has been recorded."
         return render(request, 'EmpReportProblems.html', {"msg": msg})
     return render(request, 'EmpReportProblems.html')
@@ -1939,16 +1974,16 @@ def user_change_password(request):
         u_email = request.session['u_email']
         emp_details = Employee.objects.filter(e_email=u_email, e_password=oldPwd, pk=u_id).update(e_password=newPwd)
         if emp_details:
-            subject = 'MyRemoteDesk - Password Changed'
-            message = f'Hi, your password was changed successfully! From MyRemoteDesk'
+            subject = 'EduNitor - Password Changed'
+            message = f'Hi, your password was changed successfully! From EduNitor'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [u_email, ]
             send_mail(subject, message, email_from, recipient_list)
             messages.success(request,"Password Change Successfully")
             return HttpResponseRedirect('/user_change_password')
         else:
-            subject = 'MyRemoteDesk - Notifications'
-            message = f'Hi, there was attempt to change your password! From MyRemoteDesk'
+            subject = 'EduNitor - Notifications'
+            message = f'Hi, there was attempt to change your password! From EduNitor'
             email_from = settings.EMAIL_HOST_USER
             recipient_list = [u_email, ]
             send_mail(subject, message, email_from, recipient_list)
@@ -1999,8 +2034,8 @@ def update_task(request, pk):
             tasks.save()
             if tasks:
                 empDetails = Employee.objects.filter(id=e_id, o_id_id=o_id).values()
-                subject = 'MyRemoteDesk - Task Updated for you'
-                message = f'Hi {empDetails[0]["e_name"]} , Your organization as updated a task : {t_name} , description : {t_desc}, priority : {t_priority} and deadline for task is : {t_deadline_date}, Login in your account to get more information. From: MyRemoteDesk. '
+                subject = 'EduNitor - Task Updated for you'
+                message = f'Hi {empDetails[0]["e_name"]} , Your organization as updated a task : {t_name} , description : {t_desc}, priority : {t_priority} and deadline for task is : {t_deadline_date}, Login in your account to get more information. From: EduNitor. '
                 email_from = settings.EMAIL_HOST_USER
                 recipient_list = [empDetails[0]["e_email"], ]
                 send_mail(subject, message, email_from, recipient_list)
